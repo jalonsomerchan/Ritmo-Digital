@@ -9,9 +9,22 @@ PWA en Angular para explorar el catálogo de iBroadcast guardado en MySQL y gest
 3. Rellena las variables `VITE_FIREBASE_*` y `VITE_API_BASE` de `.env.local` y `.env.production`.
 4. Inicia la app con `npm start` y accede desde `http://localhost:4200`. Este comando carga `.env.local`.
 
-La API valida el Firebase ID token. El acceso se realiza con Google a través de Firebase Authentication. En escritorio se abre la ventana de Google; en móviles se usa redirección. Autoriza los dominios local y de producción en Firebase Authentication. En producción, publica la carpeta generada por `npm run build` en un servidor HTTPS. El service worker se activa en la compilación de producción.
+La API valida el Firebase ID token. El acceso se realiza con Google a través de Firebase Authentication. En escritorio se abre la ventana de Google; en móviles se usa redirección. Autoriza los dominios local y de producción en Firebase Authentication. El service worker se activa en la compilación de producción.
 
 Si alojas el frontend en otro dominio, el servidor de la API debe permitir CORS para ese origen. `npm run build` carga `.env.production`; los valores se generan en archivos locales ignorados por Git.
+
+## Despliegue en GitHub Pages
+
+El workflow [`.github/workflows/deploy-pages.yml`](.github/workflows/deploy-pages.yml) publica automáticamente en GitHub Pages al actualizar `main` y también se puede ejecutar manualmente desde **Actions**. Genera la compilación de producción en la raíz del sitio, adecuada para el dominio `ritmodigital.alon.one`.
+
+Antes del primer despliegue:
+
+1. En **Settings → Secrets and variables → Actions → Variables** del repositorio, define `VITE_API_BASE`, `VITE_FIREBASE_API_KEY`, `VITE_FIREBASE_AUTH_DOMAIN`, `VITE_FIREBASE_PROJECT_ID` y `VITE_FIREBASE_APP_ID` con los valores de `.env.production`. Añade las variables opcionales de Firebase si las usas: `VITE_FIREBASE_STORAGE_BUCKET`, `VITE_FIREBASE_MESSAGING_SENDER_ID` y `VITE_FIREBASE_MEASUREMENT_ID`. Esta configuración forma parte del código del cliente al compilarse.
+2. En **Settings → Pages**, selecciona **GitHub Actions** como fuente y establece `ritmodigital.alon.one` como dominio personalizado.
+3. En el proveedor DNS, crea un registro `CNAME` para `ritmodigital` que apunte a `jalonsomerchan.github.io`.
+4. Añade `ritmodigital.alon.one` a los dominios autorizados de Firebase Authentication y permite ese origen en la configuración CORS de la API.
+
+El archivo `public/CNAME` queda incluido en la salida como referencia del dominio. GitHub Pages requiere configurar el dominio personalizado también en **Settings → Pages** cuando se publica con un workflow.
 
 ## Funciones
 
