@@ -1,0 +1,272 @@
+@if (booting()) {
+  <main class="boot-screen" aria-label="Cargando">
+    <span class="brand-mark"><span></span><span></span><span></span></span>
+    <span class="boot-label">Preparando tu música…</span>
+  </main>
+} @else if (!auth.configured) {
+  <main class="setup-screen">
+    <div class="setup-card">
+      <span class="brand-mark"><span></span><span></span><span></span></span>
+      <p class="eyebrow">MI MÚSICA · ALEXA</p>
+      <h1>Tu música,<br>en su sitio.</h1>
+      <p class="setup-copy">No se encontró una configuración Firebase válida. Revisa las variables <code>VITE_FIREBASE_*</code> de <code>.env.local</code> y vuelve a iniciar la app.</p>
+      <div class="setup-note"><span class="dot"></span> La configuración se guarda en el proyecto, nunca se pide por esta pantalla.</div>
+    </div>
+  </main>
+} @else if (!auth.user()) {
+  <main class="login-screen">
+    <section class="login-art" aria-label="Gestor de música">
+      <div class="art-top"><span class="brand"><span class="brand-mark"><span></span><span></span><span></span></span> RITMO DIGITAL</span><span class="art-status"><i></i> TU BIBLIOTECA</span></div>
+      <div class="art-center">
+        <div class="vinyl"><div class="vinyl-groove"></div><div class="vinyl-label"><span class="brand-mark"><span></span><span></span><span></span></span></div></div>
+        <span class="floating-note note-one">♫</span><span class="floating-note note-two">♪</span>
+        <p class="art-caption">La banda sonora<br>de tu día.</p>
+      </div>
+      <div class="art-footer"><span>IBROADCAST LIBRARY</span><span>01 — 03</span></div>
+    </section>
+    <section class="login-side">
+      <div class="login-mobile-brand"><span class="brand-mark"><span></span><span></span><span></span></span><span>RITMO DIGITAL</span></div>
+      <div class="login-form">
+        <p class="eyebrow">ACCESO PERSONAL</p>
+        <h1>Hola de nuevo.</h1>
+        <p class="login-intro">Entra con Google para ordenar lo que sonará después.</p>
+        @if (error() || auth.authError()) { <p class="inline-error" role="alert"><span>!</span>{{ error() || auth.authError() }}</p> }
+        <button class="button google-submit" type="button" (click)="signInWithGoogle()" [disabled]="busy()">
+          @if (busy()) { <span class="spinner"></span> Conectando con Google… } @else {
+            <svg class="google-mark" viewBox="0 0 48 48" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5Z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.92c-.58 2.96-2.26 5.48-4.77 7.18l7.73 6C44.39 38.02 46.98 31.92 46.98 24.55Z"/><path fill="#FBBC05" d="M10.53 28.59A14.4 14.4 0 0 1 9.75 24c0-1.59.27-3.13.76-4.59l-7.98-6.19A23.9 23.9 0 0 0 0 24c0 3.87.93 7.52 2.56 10.78l7.97-6.19Z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.9-5.8l-7.73-6c-2.14 1.44-4.89 2.3-8.17 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48Z"/></svg>
+            Continuar con Google <span class="button-arrow">→</span>
+          }
+        </button>
+        <p class="login-foot">Acceso protegido con tu cuenta de Google</p>
+      </div>
+      <div class="login-bottom"><span>RITMO DIGITAL</span><span>HECHO PARA ESCUCHAR</span></div>
+    </section>
+  </main>
+} @else if (!linked()) {
+  <main class="pair-screen">
+    <header class="pair-topbar"><a class="brand" (click)="signOut()"><span class="brand-mark"><span></span><span></span><span></span></span> RITMO DIGITAL</a><button class="account-pill" (click)="signOut()"><span class="avatar">{{ auth.email.charAt(0).toUpperCase() }}</span><span>{{ auth.email }}</span><span class="logout-icon">↗</span></button></header>
+    <section class="pair-card">
+      <div class="pair-illustration"><div class="echo-ring ring-a"></div><div class="echo-ring ring-b"></div><div class="echo-device"><span class="echo-light"></span><span class="echo-line"></span></div><div class="pair-orbit"><span class="brand-mark"><span></span><span></span><span></span></span></div></div>
+      <p class="eyebrow">UN SOLO PASO</p>
+      <h1>Conecta tu<br><em>cola con Alexa.</em></h1>
+      <p class="pair-copy">Así podrás ordenar desde aquí las canciones que escucha tu Echo.</p>
+      @if (pairCode()) {
+        <div class="pair-code-wrap">
+          <span class="pair-step">CÓDIGO DE EMPAREJAMIENTO</span>
+          <div class="pair-code">{{ pairCode() }}</div>
+          <ol class="pair-instructions"><li>Abre la skill de música en tu Echo.</li><li>Di <strong>«vincula la cola {{ pairCode() }}»</strong>.</li><li>Cuando Alexa confirme, comprueba el vínculo.</li></ol>
+          <button class="button primary pair-check" (click)="checkPairing()" [disabled]="pairLoading()">{{ pairLoading() ? 'Comprobando…' : 'Ya lo he vinculado' }} <span>→</span></button>
+          <button class="text-button" (click)="startPairing()">Generar otro código</button>
+        </div>
+      } @else {
+        <button class="button primary pair-start" (click)="startPairing()" [disabled]="pairLoading()">{{ pairLoading() ? 'Preparando código…' : 'Vincular con Alexa' }} <span>→</span></button>
+      }
+      @if (error()) { <p class="inline-error centered" role="alert"><span>!</span>{{ error() }}</p> }
+      <p class="pair-expiry">El código es de un solo uso y caduca a los 10 minutos.</p>
+    </section>
+    <p class="pair-bottom">MI MÚSICA, A TU MANERA <span>•</span> {{ auth.email }}</p>
+  </main>
+} @else {
+  <div class="app-shell">
+    <aside class="sidebar">
+      <a class="brand sidebar-brand" (click)="openQueue()"><span class="brand-mark"><span></span><span></span><span></span></span><span>RITMO<br>DIGITAL</span></a>
+      <div class="sidebar-label">TU BIBLIOTECA</div>
+      <nav class="main-nav" aria-label="Navegación principal">
+        <button [class.active]="view() === 'home'" (click)="openHome()"><span class="nav-icon">⌂</span><span>Inicio</span></button>
+        <button [class.active]="view() === 'search'" (click)="openSearch()"><span class="nav-icon search-icon">⌕</span><span>Buscar</span></button>
+        <button [class.active]="view() === 'artists'" (click)="openArtists()"><span class="nav-icon">♬</span><span>Artistas</span></button>
+        <button [class.active]="view() === 'albums'" (click)="openAlbums()"><span class="nav-icon">▦</span><span>Álbumes</span></button>
+        <button [class.active]="view() === 'radios'" (click)="openRadios()"><span class="nav-icon">◉</span><span>Radios</span></button>
+        <button [class.active]="view() === 'stats'" (click)="openStatistics()"><span class="nav-icon">▥</span><span>Estadísticas</span></button>
+        <button [class.active]="view() === 'queue'" (click)="openQueue()"><span class="nav-icon queue-icon">≋</span><span>Cola de Alexa</span><span class="nav-count">{{ pendingCount() }}</span></button>
+      </nav>
+      <div class="sidebar-device">
+        <div class="device-orb"><span></span></div>
+        <div><span class="device-title">Alexa conectada</span><span class="device-subtitle">Cola sincronizada</span></div>
+        <span class="online-dot"></span>
+      </div>
+      <div class="sidebar-bottom">
+        <div class="sidebar-user"><span class="avatar">{{ auth.email.charAt(0).toUpperCase() }}</span><span class="user-details"><b>{{ auth.email }}</b><small>Cuenta personal</small></span><button class="more-button" aria-label="Cerrar sesión" title="Cerrar sesión" (click)="signOut()">···</button></div>
+        <div class="sidebar-version">MI MÚSICA <span>•</span> ALEXA</div>
+      </div>
+    </aside>
+
+    <main class="main-area">
+      <header class="topbar">
+        <div class="breadcrumbs"><span>Ritmo Digital</span><span class="crumb-slash">/</span><strong>{{ view() === 'home' ? 'Inicio' : view() === 'artists' ? 'Artistas' : view() === 'albums' ? 'Álbumes' : view() === 'radios' ? 'Radios' : view() === 'stats' ? 'Estadísticas' : view() === 'queue' ? 'Cola de Alexa' : 'Buscar' }}</strong></div>
+        <div class="top-actions"><span class="connection-label"><i></i> Conectado</span><button class="icon-button refresh-button" aria-label="Actualizar cola" title="Actualizar cola" (click)="loadDashboard()" [disabled]="loadingQueue()">↻</button><button class="button sync-library-button" [class.syncing]="syncingLibrary()" (click)="syncLibrary()" [disabled]="syncingLibrary()" [attr.aria-label]="syncingLibrary() ? 'Sincronizando biblioteca' : 'Sincronizar biblioteca'" title="Sincronizar biblioteca"><span aria-hidden="true">↻</span><span class="sync-library-label">{{ syncingLibrary() ? 'Sincronizando…' : 'Sincronizar' }}</span></button><button class="button small-search" (click)="openSearch()"><span>⌕</span> Buscar música</button></div>
+      </header>
+
+      <div class="content-wrap">
+        @if (error()) { <div class="global-error" role="alert"><span>!</span><span>{{ error() }}</span><button aria-label="Cerrar aviso" (click)="error.set('')">×</button></div> }
+        @if (notice()) { <div class="toast" role="status"><span>✓</span>{{ notice() }}</div> }
+
+        @if (searching()) {
+          <section class="search-view">
+            <div class="page-heading search-heading">
+              <div><p class="eyebrow">IBROADCAST · TU BIBLIOTECA</p><h1>Encuentra tu <em>próxima canción.</em></h1><p>Busca por título, artista, álbum o género.</p></div>
+              <div class="heading-ornament"><span>♫</span><i></i><b></b></div>
+            </div>
+            <div class="search-box"><span class="search-glyph">⌕</span><input #searchInput autofocus type="search" [ngModel]="query()" (ngModelChange)="onQueryChange($event)" name="librarySearch" placeholder="¿Qué te apetece escuchar?" aria-label="Buscar en tu biblioteca"><kbd>⌘ K</kbd></div>
+            <div class="filter-row" aria-label="Tipo de búsqueda">
+              <button [class.selected]="searchType() === 'all'" (click)="setSearchType('all')">Todo</button><button [class.selected]="searchType() === 'track'" (click)="setSearchType('track')">Canciones</button><button [class.selected]="searchType() === 'artist'" (click)="setSearchType('artist')">Artistas</button><button [class.selected]="searchType() === 'album'" (click)="setSearchType('album')">Álbumes</button><button [class.selected]="searchType() === 'playlist'" (click)="setSearchType('playlist')">Playlists</button><button [class.selected]="searchType() === 'genre'" (click)="setSearchType('genre')">Géneros</button>
+            </div>
+            @if (query().trim().length < 2) {
+              <div class="search-empty prompt-empty"><div class="search-prompt-art"><span>⌕</span></div><h2>Tu biblioteca te espera.</h2><p>Escribe al menos dos letras para buscar.</p><div class="suggestion-chips"><button (click)="onQueryChange('favoritas')">favoritas</button><button (click)="onQueryChange('rock')">rock</button><button (click)="onQueryChange('últimos')">últimos</button></div></div>
+            } @else if (searchLoading() && !hasSearchResults()) {
+              <div class="search-skeleton" role="status" aria-label="Buscando en tu biblioteca">@for (card of skeletonCards; track card) { <div class="search-skeleton-row"><span class="skeleton skeleton-cover"></span><span class="skeleton skeleton-line"></span><span class="skeleton skeleton-button"></span></div> }</div>
+            } @else if (!hasSearchResults()) {
+              <div class="search-empty"><div class="empty-note">♫</div><h2>No encontramos coincidencias.</h2><p>Prueba con otro título, artista o álbum.</p></div>
+            } @else {
+              <div class="result-heading"><div><span class="eyebrow">RESULTADOS</span><h2>{{ searchTotal() }} {{ resultCountLabel() }}</h2></div>@if (searchTracks().length) { <button class="button add-all" (click)="addTracks(searchTracks().map(track => track.id))" [disabled]="busy()"><span>＋</span> Añadir visibles a la cola</button> }</div>
+              @if (searchType() === 'artist' || searchType() === 'album' || searchType() === 'playlist' || searchType() === 'genre') {
+                <div class="result-list entity-list" role="list">
+                  @for (entity of searchEntities(); track entity.id ?? entity.name) {
+                    <article class="entity-row" role="listitem"><span class="entity-glyph">@if (entity.artwork_url) { <img [src]="entity.artwork_url" [alt]="entity.name" loading="lazy"> } @else { {{ searchType() === 'artist' ? '♫' : searchType() === 'album' ? '◉' : searchType() === 'playlist' ? '≋' : '✧' }} }</span><div class="track-info"><strong>{{ entity.name }}</strong><span>{{ entity.track_count ?? 0 }} {{ entity.track_count === 1 ? 'canción' : 'canciones' }}</span></div>@if (searchType() === 'artist' || searchType() === 'album') { <button class="entity-action" (click)="playEntity(entity)" [disabled]="busy()" [attr.aria-label]="'Reproducir ' + entity.name + ' y sustituir toda la cola de Alexa'" title="Sustituye toda la cola de Alexa">▶ <span>Reproducir · sustituir cola</span></button><div class="random-flags"><button (click)="toggleRandomPreference(searchType() === 'artist' ? 'artist' : 'album', entity.id, 'exclude_group_random')" [class.flag-active]="isExcluded(searchType() === 'artist' ? 'artist' : 'album', entity.id, 'exclude_group_random')" [attr.aria-pressed]="isExcluded(searchType() === 'artist' ? 'artist' : 'album', entity.id, 'exclude_group_random')" title="No contar en Grupo aleatorio">🗑 Excluir Grupo</button><button (click)="toggleRandomPreference(searchType() === 'artist' ? 'artist' : 'album', entity.id, 'exclude_random')" [class.flag-active]="isExcluded(searchType() === 'artist' ? 'artist' : 'album', entity.id, 'exclude_random')" [attr.aria-pressed]="isExcluded(searchType() === 'artist' ? 'artist' : 'album', entity.id, 'exclude_random')" title="No contar en Aleatorio">🗑 Excluir Aleatorio</button></div> }@if (searchType() !== 'playlist' && searchType() !== 'genre') { <button class="entity-action secondary-entity-action" (click)="showEntityTracks(entity)" aria-label="Buscar canciones de {{ entity.name }}">Canciones <span>→</span></button> }</article>
+                  }
+                </div>
+              } @else {
+                <div class="result-list" role="list">
+                  @for (track of searchTracks(); track track.id; let i = $index) {
+                    <article class="result-row" role="listitem">
+                      <span class="result-number">{{ (i + 1).toString().padStart(2, '0') }}</span><div class="cover-art" [class]="'cover-art ' + albumArt(track)">@if (track.artwork_url) { <img [src]="track.artwork_url" [alt]="'Carátula de ' + track.album" loading="lazy"> } @else { <span>♫</span> }</div>
+                      <div class="track-info"><strong>{{ track.title }}</strong><span>{{ track.artist || 'Artista desconocido' }}</span></div><span class="track-album">{{ track.album || '—' }}</span><span class="track-duration">{{ duration(track.duration) }}</span>
+                      <div class="random-flags compact-random-flags"><button (click)="toggleRandomPreference('track', track.id, 'exclude_group_random')" [class.flag-active]="isExcluded('track', track.id, 'exclude_group_random')" [attr.aria-pressed]="isExcluded('track', track.id, 'exclude_group_random')" [attr.aria-label]="'No contar ' + track.title + ' en Grupo aleatorio'" title="No contar en Grupo aleatorio">🗑G</button><button (click)="toggleRandomPreference('track', track.id, 'exclude_random')" [class.flag-active]="isExcluded('track', track.id, 'exclude_random')" [attr.aria-pressed]="isExcluded('track', track.id, 'exclude_random')" [attr.aria-label]="'No contar ' + track.title + ' en Aleatorio'" title="No contar en Aleatorio">🗑A</button></div><button class="add-track" [attr.aria-label]="'Añadir ' + track.title + ' a Alexa'" title="Reproducir en Alexa" (click)="playTrack(track)" [disabled]="busy()">▶</button>
+                    </article>
+                  }
+                </div>
+              }
+              @if (searchOffset() < searchTotal()) { <button class="load-more" (click)="search(true)" [disabled]="searchLoading()">{{ searchLoading() ? 'Cargando…' : 'Cargar más ' + resultCountLabel() }} <span>↓</span></button> }
+            }
+          </section>
+        } @else if (view() === 'artists') {
+          <section class="catalog-view">
+            <div class="catalog-intro artist-catalog-intro"><div><p class="eyebrow">TU COLECCIÓN · ARTISTAS DE ÁLBUMES</p><h1>Artistas</h1><p>Explora las voces detrás de tus álbumes y reproduce su colección completa en Alexa.</p></div><div class="catalog-count"><span>RESULTADOS VISIBLES</span><strong>{{ artists().length }}</strong></div></div>
+            <div class="catalog-search"><span>⌕</span><input type="search" [ngModel]="libraryQuery()" (ngModelChange)="filterLibrary($event)" placeholder="Buscar artistas" aria-label="Buscar artistas"></div>
+            @if (artistsLoading()) { <div class="artist-grid skeleton-grid" role="status" aria-label="Cargando artistas">@for (card of skeletonCards; track card) { <article class="artist-card skeleton-card"><span class="skeleton skeleton-circle"></span><span class="skeleton skeleton-line skeleton-title"></span><span class="skeleton skeleton-line skeleton-meta"></span><span class="skeleton skeleton-button"></span></article> }</div> }
+            @else if (!artists().length) { <div class="search-empty"><h2>No hay artistas para mostrar.</h2><p>Prueba otra búsqueda en tu biblioteca.</p></div> }
+            @else { <div class="artist-grid" role="list">@for (artist of artists(); track artist.id ?? artist.name) { <article class="artist-card" role="listitem"><button class="artist-avatar" [class]="'artist-avatar ' + entityArt(artist)" (click)="openAlbums(artist)" [attr.aria-label]="'Ver álbumes de ' + artist.name">@if (artist.artwork_url) { <img [src]="artist.artwork_url" [alt]="artist.name" loading="lazy"> } @else { {{ artist.name.charAt(0).toUpperCase() }} }</button><button class="artist-name" (click)="openAlbums(artist)">{{ artist.name }}</button><span class="artist-meta">{{ artist.track_count ?? 0 }} canciones de álbumes</span><button class="collection-play" (click)="playArtist(artist)" [disabled]="busy()" [attr.aria-label]="'Reproducir ' + artist.name + ' y sustituir toda la cola de Alexa'">{{ busy() ? 'Preparando…' : '▶ Reproducir · sustituir cola' }}</button><div class="random-flags card-random-flags"><button (click)="toggleRandomPreference('artist', artist.id, 'exclude_group_random')" [class.flag-active]="isExcluded('artist', artist.id, 'exclude_group_random')" [attr.aria-pressed]="isExcluded('artist', artist.id, 'exclude_group_random')" title="No contar en Grupo aleatorio">🗑 Excluir Grupo</button><button (click)="toggleRandomPreference('artist', artist.id, 'exclude_random')" [class.flag-active]="isExcluded('artist', artist.id, 'exclude_random')" [attr.aria-pressed]="isExcluded('artist', artist.id, 'exclude_random')" title="No contar en Aleatorio">🗑 Excluir Aleatorio</button></div></article> }</div> }
+          </section>
+        } @else if (view() === 'albums') {
+          <section class="catalog-view">
+            @if (selectedArtist()) { <div class="artist-spotlight"><div class="spotlight-art" [class]="'spotlight-art ' + entityArt(selectedArtist()!)">@if (selectedArtist()!.artwork_url) { <img [src]="selectedArtist()!.artwork_url" [alt]="selectedArtist()!.name" loading="lazy"> } @else { <span>{{ selectedArtist()!.name.charAt(0).toUpperCase() }}</span> }</div><div class="spotlight-copy"><p class="eyebrow">ARTISTA DE ÁLBUMES</p><h1>{{ selectedArtist()!.name }}</h1><p>{{ selectedArtist()!.track_count ?? 0 }} canciones · {{ albums().length }} álbumes en tu biblioteca</p><div class="spotlight-actions"><button class="button primary" (click)="playArtist(selectedArtist()!)" [disabled]="busy()">▶ Reproducir y sustituir cola</button><button class="button secondary" (click)="openArtists()">← Todos los artistas</button></div></div><div class="spotlight-orbit" aria-hidden="true">♫</div></div> }
+            @else { <div class="catalog-intro album-catalog-intro"><div><p class="eyebrow">TU COLECCIÓN · DISCOS COMPLETOS</p><h1>Álbumes</h1><p>Recorre tus discos y reemplaza la cola de Alexa con el álbum que te apetezca.</p></div><div class="catalog-count"><span>RESULTADOS VISIBLES</span><strong>{{ albums().length }}</strong></div></div> }
+            <div class="catalog-search"><span>⌕</span><input type="search" [ngModel]="libraryQuery()" (ngModelChange)="filterLibrary($event)" placeholder="Buscar álbumes" aria-label="Buscar álbumes"></div>
+            @if (albumsLoading()) { <div class="album-grid skeleton-grid" role="status" aria-label="Cargando álbumes">@for (card of skeletonCards; track card) { <article class="album-card skeleton-card"><span class="skeleton skeleton-cover"></span><span class="skeleton skeleton-line skeleton-title"></span><span class="skeleton skeleton-line skeleton-meta"></span><span class="skeleton skeleton-button"></span></article> }</div> }
+            @else if (!albums().length) { <div class="search-empty"><h2>No hay álbumes para mostrar.</h2><p>Prueba otra búsqueda en tu biblioteca.</p></div> }
+            @else { <div class="album-grid" role="list">@for (album of albums(); track album.id ?? album.name) { <article class="album-card" role="listitem"><div class="album-cover" [class]="'album-cover ' + entityArt(album)">@if (album.artwork_url) { <img [src]="album.artwork_url" [alt]="'Carátula de ' + album.name" loading="lazy"> } @else { <span>{{ album.name.charAt(0).toUpperCase() }}</span> }</div><strong>{{ album.name }}</strong><span>{{ album.artist || 'Artista desconocido' }}@if (album.year) { · {{ album.year }} }</span><small>{{ album.track_count ?? 0 }} canciones</small><button class="collection-play" (click)="playAlbum(album)" [disabled]="busy()" [attr.aria-label]="'Reproducir ' + album.name + ' y sustituir toda la cola de Alexa'">{{ busy() ? 'Preparando…' : '▶ Reproducir · sustituir cola' }}</button><div class="random-flags"><button (click)="toggleRandomPreference('album', album.id, 'exclude_group_random')" [class.flag-active]="isExcluded('album', album.id, 'exclude_group_random')" [attr.aria-pressed]="isExcluded('album', album.id, 'exclude_group_random')" title="No contar en Grupo aleatorio">🗑 Excluir Grupo</button><button (click)="toggleRandomPreference('album', album.id, 'exclude_random')" [class.flag-active]="isExcluded('album', album.id, 'exclude_random')" [attr.aria-pressed]="isExcluded('album', album.id, 'exclude_random')" title="No contar en Aleatorio">🗑 Excluir Aleatorio</button></div></article> }</div> }
+          </section>
+        } @else if (view() === 'radios') {
+          <section class="catalog-view radios-view">
+            <div class="page-heading"><div><p class="eyebrow">ALEXA · TUS SELECCIONES</p><h1>Radios</h1><p>Crea una radio con varios artistas. Alexa mezclará sus canciones cuando la reproduzcas.</p></div></div>
+            <div class="radio-layout">
+              <section class="radio-editor"><div class="radio-editor-head"><div><span class="eyebrow">{{ editingRadioId() ? 'EDITAR RADIO' : 'NUEVA RADIO' }}</span><h2>{{ editingRadioId() ? 'Ajusta tu selección' : 'Elige a quién escuchar' }}</h2></div><button class="text-button" (click)="startNewRadio()">Nueva</button></div>
+                <label class="radio-name-field">Nombre de la radio<input type="text" maxlength="80" [ngModel]="radioName()" (ngModelChange)="radioName.set($event)" placeholder="Por ejemplo, Indie para trabajar"></label>
+                <div class="catalog-search"><span>⌕</span><input type="search" [ngModel]="radioSearch()" (ngModelChange)="filterRadioArtists($event)" placeholder="Buscar artistas para añadir" aria-label="Buscar artistas para la radio"></div>
+                <div class="radio-artist-list">@if (artistsLoading()) { @for (card of skeletonCards; track card) { <div class="radio-skeleton-row"><span class="skeleton skeleton-check"></span><span class="skeleton skeleton-line"></span></div> } } @else { @for (artist of artists(); track artist.id ?? artist.name) { <button class="radio-artist-choice" [class.selected]="selectedRadioArtists().includes(artist.id ?? '')" (click)="toggleRadioArtist(artist.id)"><span class="radio-check">{{ selectedRadioArtists().includes(artist.id ?? '') ? '✓' : '+' }}</span><span>{{ artist.name }}</span><small>{{ artist.track_count ?? 0 }} canciones</small></button> } }</div>
+                <div class="radio-editor-footer"><span>{{ selectedRadioArtists().length }} artistas</span><button class="button primary" (click)="saveRadio()" [disabled]="savingRadio()">{{ savingRadio() ? 'Guardando…' : editingRadioId() ? 'Guardar cambios' : 'Crear radio' }}</button></div>
+              </section>
+              <section class="saved-radios"><div class="radio-editor-head"><div><span class="eyebrow">TU COLECCIÓN</span><h2>Radios guardadas</h2></div></div>
+                @if (radiosLoading()) { <div class="radio-skeleton-list" role="status" aria-label="Cargando radios">@for (card of skeletonCards; track card) { <div class="radio-skeleton-saved"><span class="skeleton skeleton-circle"></span><span class="skeleton skeleton-line"></span><span class="skeleton skeleton-button"></span></div> }</div> }
+                @else if (!radios().length) { <div class="search-empty"><h2>Aún no tienes radios.</h2><p>Selecciona artistas para crear la primera.</p></div> }
+                @else { @for (radio of radios(); track radio.id) { <article class="saved-radio"><span class="saved-radio-icon">◉</span><div><strong>{{ radio.name }}</strong><small>{{ radio.artist_ids.length }} {{ radio.artist_ids.length === 1 ? 'artista' : 'artistas' }}</small></div><button class="entity-action radio-play" (click)="playRadio(radio)" [disabled]="busy()" [attr.aria-label]="'Reproducir ' + radio.name + ' y sustituir toda la cola de Alexa'" title="Sustituye toda la cola de Alexa">▶ <span>{{ busy() ? 'Preparando…' : 'Sustituir cola' }}</span></button><button class="radio-edit" (click)="editRadio(radio)" aria-label="Editar radio {{ radio.name }}">✎</button><button class="radio-edit" (click)="deleteRadio(radio)" [disabled]="busy()" aria-label="Eliminar radio {{ radio.name }}">×</button></article> } }
+              </section>
+            </div>
+          </section>
+        } @else if (view() === 'stats') {
+          <section class="stats-view">
+            <div class="stats-hero"><div><p class="eyebrow">ALEXA · TU ACTIVIDAD</p><h1>Lo que has<br><em>escuchado.</em></h1><p>Reproducciones completadas, canciones que has saltado y los artistas de álbumes que más has escuchado.</p></div><div class="stats-hero-art" aria-hidden="true"><div class="stats-disc"><span>RD</span></div><i>♫</i><b>♪</b></div><button class="stats-refresh" (click)="openStatistics()" [disabled]="statisticsLoading()" aria-label="Actualizar estadísticas" title="Actualizar estadísticas">{{ statisticsLoading() ? '…' : '↻' }}</button></div>
+            @if (statisticsLoading() && !statistics()) {
+              <div class="stats-kpis stats-skeleton" role="status" aria-label="Calculando estadísticas">@for (card of skeletonCards.slice(0, 4); track card) { <article class="stats-kpi"><span class="skeleton skeleton-line skeleton-meta"></span><span class="skeleton skeleton-line skeleton-title"></span><span class="skeleton skeleton-line skeleton-meta"></span></article> }</div>
+              <div class="stats-panels stats-skeleton-panels" aria-hidden="true">@for (card of skeletonCards.slice(0, 4); track card) { <section class="stats-panel"><span class="skeleton skeleton-line skeleton-meta"></span><span class="skeleton skeleton-line skeleton-title"></span><span class="skeleton skeleton-line"></span><span class="skeleton skeleton-line"></span></section> }</div>
+            }
+            @else if (statistics(); as stats) {
+              <div class="stats-kpis"><article class="stats-kpi"><span>ESCUCHADAS</span><strong>{{ stats.totals.finished.toLocaleString('es-ES') }}</strong><small>reproducciones completadas</small></article><article class="stats-kpi ignored-kpi"><span>IGNORADAS</span><strong>{{ stats.totals.ignored.toLocaleString('es-ES') }}</strong><small>canciones saltadas en Alexa</small></article><article class="stats-kpi"><span>CANCIONES DISTINTAS</span><strong>{{ stats.totals.unique_tracks.toLocaleString('es-ES') }}</strong><small>con actividad registrada</small></article><article class="stats-kpi accent-kpi"><span>TIEMPO ESCUCHADO</span><strong>{{ formatListeningTime(stats.totals.listening_seconds) }}</strong><small>incluye el tiempo antes de saltar</small></article></div>
+              <div class="stats-panels">
+                <section class="stats-panel stats-chart-panel listening-timeline"><div class="stats-panel-head"><div><p class="eyebrow">ÚLTIMOS 12 MESES</p><h2>Tu actividad en Alexa</h2></div><span><i class="legend-played"></i> Escuchadas <i class="legend-ignored"></i> Saltadas</span></div>@if (stats.totals.finished || stats.totals.ignored) { <div class="listening-chart">@for (month of stats.timeline; track month.month) { <div class="listening-month"><div class="listening-bars"><i class="listened-bar" [style.height.%]="statsShare(month.finished, maxTimelineCount(stats))" [title]="month.finished + ' escuchadas'"></i><i class="ignored-bar" [style.height.%]="statsShare(month.ignored, maxTimelineCount(stats))" [title]="month.ignored + ' saltadas'"></i></div><small>{{ formatStatsMonth(month.month) }}</small></div> }</div> } @else { <p class="stats-empty">Todavía no hay reproducciones ni canciones saltadas registradas.</p> }</section>
+                <section class="stats-panel stats-ranking">
+                  <div class="stats-panel-head"><div><p class="eyebrow">TUS FAVORITOS</p><h2>Artistas de álbumes</h2></div><span>por escuchas completadas</span></div>
+                  @if (stats.top_artists.length) {
+                    <div class="stats-rank-list">
+                      @for (artist of stats.top_artists; track artist.id; let i = $index) {
+                        <article class="stats-rank-row"><span class="stats-rank-number">{{ (i + 1).toString().padStart(2, '0') }}</span><span class="stats-rank-art artist-rank-art">@if (artist.artwork_url) { <img [src]="artist.artwork_url" [alt]="artist.name" loading="lazy"> } @else { {{ artist.name.charAt(0).toUpperCase() }} }</span><div class="stats-rank-info"><strong>{{ artist.name }}</strong><span>{{ artist.play_count }} escuchas</span><i><b [style.width.%]="statsShare(artist.play_count, stats.top_artists[0].play_count)"></b></i></div></article>
+                      }
+                    </div>
+                  } @else { <p class="stats-empty">Aún no hay canciones completadas para crear este ranking.</p> }
+                </section>
+                <section class="stats-panel stats-ranking">
+                  <div class="stats-panel-head"><div><p class="eyebrow">DISCOS MÁS ESCUCHADOS</p><h2>Álbumes favoritos</h2></div><span>por escuchas completadas</span></div>
+                  @if (stats.top_albums.length) {
+                    <div class="stats-rank-list">
+                      @for (album of stats.top_albums; track album.id; let i = $index) {
+                        <article class="stats-rank-row"><span class="stats-rank-number">{{ (i + 1).toString().padStart(2, '0') }}</span><span class="stats-rank-art album-rank-art">@if (album.artwork_url) { <img [src]="album.artwork_url" [alt]="album.name" loading="lazy"> } @else { {{ album.name.charAt(0).toUpperCase() }} }</span><div class="stats-rank-info"><strong>{{ album.name }}</strong><span>{{ album.artist }} · {{ album.play_count }} escuchas</span><i><b [style.width.%]="statsShare(album.play_count, stats.top_albums[0].play_count)"></b></i></div></article>
+                      }
+                    </div>
+                  } @else { <p class="stats-empty">Aún no hay álbumes escuchados por completo.</p> }
+                </section>
+                <section class="stats-panel stats-ranking">
+                  <div class="stats-panel-head"><div><p class="eyebrow">EN BUCLE</p><h2>Canciones más escuchadas</h2></div><span>reproducciones completadas</span></div>
+                  @if (stats.top_tracks.length) { <div class="stats-rank-list">@for (track of stats.top_tracks; track track.id; let i = $index) { <article class="stats-rank-row"><span class="stats-rank-number">{{ (i + 1).toString().padStart(2, '0') }}</span><span class="stats-rank-art album-rank-art">@if (track.artwork_url) { <img [src]="track.artwork_url" [alt]="track.album || track.title" loading="lazy"> } @else { ♫ }</span><div class="stats-rank-info"><strong>{{ track.title }}</strong><span>{{ track.artist || track.album }} · {{ track.play_count }} escuchas</span></div></article> }</div> } @else { <p class="stats-empty">Aún no hay canciones completadas.</p> }
+                </section>
+                <section class="stats-panel stats-ranking">
+                  <div class="stats-panel-head"><div><p class="eyebrow">LAS QUE HAS PASADO</p><h2>Canciones ignoradas</h2></div><span>saltos en Alexa</span></div>
+                  @if (stats.ignored_tracks.length) { <div class="stats-rank-list">@for (track of stats.ignored_tracks; track track.id; let i = $index) { <article class="stats-rank-row"><span class="stats-rank-number">{{ (i + 1).toString().padStart(2, '0') }}</span><span class="stats-rank-art album-rank-art">@if (track.artwork_url) { <img [src]="track.artwork_url" [alt]="track.album || track.title" loading="lazy"> } @else { ♫ }</span><div class="stats-rank-info"><strong>{{ track.title }}</strong><span>{{ track.artist || track.album }} · {{ track.ignore_count }} {{ track.ignore_count === 1 ? 'salto' : 'saltos' }}</span></div></article> }</div> } @else { <p class="stats-empty">No hay canciones saltadas registradas.</p> }
+                </section>
+                <section class="stats-panel stats-ranking recent-panel">
+                  <div class="stats-panel-head"><div><p class="eyebrow">LO ÚLTIMO</p><h2>Actividad reciente</h2></div><span>{{ stats.recent.length }} eventos</span></div>
+                  @if (stats.recent.length) { <div class="stats-rank-list">@for (event of stats.recent; track event.track_id + event.event_at) { <article class="stats-rank-row"><span class="recent-status" [class.recent-ignored]="event.outcome === 'skipped'">{{ event.outcome === 'finished' ? '✓' : '↷' }}</span><span class="stats-rank-art album-rank-art">@if (event.artwork_url) { <img [src]="event.artwork_url" [alt]="event.album || event.title" loading="lazy"> } @else { ♫ }</span><div class="stats-rank-info"><strong>{{ event.title }}</strong><span>{{ event.artist || event.album }} · {{ event.outcome === 'finished' ? 'Escuchada' : 'Saltada' }} · {{ formatStatsDate(event.event_at) }}</span></div></article> }</div> } @else { <p class="stats-empty">Tu actividad de Alexa aparecerá aquí.</p> }
+                </section>
+              </div>
+            } @else if (!statisticsLoading()) { <div class="stats-load-error"><p>No se han podido cargar las estadísticas.</p><button class="button secondary" (click)="openStatistics()">Reintentar</button></div> }
+          </section>
+        } @else if (view() === 'queue') {
+          <section class="queue-view">
+            <div class="page-heading queue-heading">
+              <div><p class="eyebrow">TU MÚSICA · EN DIRECTO</p><h1>La cola <em>suena así.</em></h1><p>Organiza lo que Alexa reproducirá a continuación.</p></div>
+              <div class="queue-heading-actions"><button class="button add-music" (click)="openSearch()"><span>＋</span> Añadir música</button><button class="icon-button more-queue" aria-label="Vaciar cola pendiente" title="Vaciar cola pendiente" (click)="clearPending()" [disabled]="pendingCount() === 0 || busy()">···</button></div>
+            </div>
+
+            @if (loadingQueue() && !queue().length) {
+              <div class="queue-skeleton" role="status" aria-label="Sincronizando la cola">@for (card of skeletonCards; track card) { <div class="queue-skeleton-row"><span class="skeleton skeleton-cover"></span><span class="skeleton skeleton-line"></span><span class="skeleton skeleton-button"></span></div> }</div>
+            } @else if (!queue().length) {
+              <div class="queue-empty"><div class="empty-record"><div><span class="brand-mark"><span></span><span></span><span></span></span></div></div><p class="eyebrow">UNA PÁGINA EN BLANCO</p><h2>¿Qué te apetece escuchar?</h2><p>Busca en tu biblioteca y añade canciones.<br>Alexa las tendrá preparadas cuando abras la skill.</p><button class="button primary" (click)="openSearch()">Explorar mi música <span>→</span></button></div>
+            } @else {
+              @if (nowPlaying(); as track) {
+                <article class="now-playing"><div class="playing-cover" [class]="'playing-cover ' + albumArt(track)">@if (track.artwork_url) { <img [src]="track.artwork_url" [alt]="'Carátula de ' + track.album" loading="lazy"> } @else { <span>♫</span> }<div class="playing-bars"><i></i><i></i><i></i><i></i></div></div><div class="playing-info"><span class="eyebrow"><i class="sound-dot"></i> SONANDO AHORA</span><strong>{{ track.title }}</strong><span>{{ track.artist || 'Artista desconocido' }}@if (track.album) { <b>·</b> {{ track.album }} }</span></div><span class="now-playing-duration">{{ duration(track.duration) }}</span></article>
+              }
+              <div class="queue-section-head"><div><span class="eyebrow">LA COLA</span><h2>{{ pendingCount() }} {{ pendingCount() === 1 ? 'canción' : 'canciones' }} a continuación</h2></div>@if (pendingCount() > 0) { <button class="clear-button" (click)="clearPending()" [disabled]="busy()">Vaciar cola</button> }</div>
+              @if (!editableQueue().length) {
+                <div class="queue-tail-empty"><span>✦</span><div><strong>No hay canciones pendientes</strong><p>Añade música para que suene después.</p></div><button (click)="openSearch()">Añadir canciones <span>→</span></button></div>
+              } @else {
+                <div class="queue-list" role="list" aria-label="Canciones pendientes">
+                  @for (item of editableQueue(); track item.index; let i = $index) {
+                    <article class="queue-row" role="listitem" draggable="true" (dragstart)="startDrag($event, item)" (dragover)="allowDrop($event)" (drop)="dropOn($event, item)">
+                      <span class="drag-handle" aria-label="Arrastrar para reordenar" title="Arrastrar para reordenar">⠿</span><span class="queue-number">{{ (i + 1).toString().padStart(2, '0') }}</span><div class="cover-art small-cover" [class]="'cover-art small-cover ' + albumArt(item)">@if (item.artwork_url) { <img [src]="item.artwork_url" [alt]="'Carátula de ' + item.album" loading="lazy"> } @else { <span>♫</span> }</div>
+                      <div class="track-info"><strong>{{ item.title }}</strong><span>{{ item.artist || 'Artista desconocido' }}</span></div><span class="track-album">{{ item.album || '—' }}</span><span class="track-duration">{{ duration(item.duration) }}</span>
+                      <div class="row-actions"><button aria-label="Subir canción" title="Subir" (click)="move(item, -1)" [disabled]="i === 0 || busy()">↑</button><button aria-label="Bajar canción" title="Bajar" (click)="move(item, 1)" [disabled]="i === editableQueue().length - 1 || busy()">↓</button><button class="remove-track" [attr.aria-label]="'Quitar ' + item.title" title="Quitar de la cola" (click)="remove(item)" [disabled]="busy()">×</button></div>
+                    </article>
+                  }
+                </div>
+              }
+              @if (editableQueue().length) { <div class="queue-hint"><span>✧</span> Arrastra para reordenar <i></i> Las canciones enviadas a Alexa quedan protegidas</div> }
+            }
+            <div class="queue-footer"><span>RITMO DIGITAL <i>•</i> TU MÚSICA, EN ORDEN</span><button (click)="loadDashboard()">Última sincronización <span>↻</span></button></div>
+          </section>
+        } @else {
+          <section class="home-view">
+            <div class="home-hero"><div class="hero-copy"><p class="eyebrow">TU MÚSICA, EN UN SOLO LUGAR</p><h1>Lo que quieres<br>escuchar, <em>ahora.</em></h1><p>Explora tu biblioteca de iBroadcast y pon álbumes y artistas en la cola de Alexa.</p><button class="button hero-button" (click)="openSearch()"><span>⌕</span> Encuentra música</button></div><div class="hero-art"><div class="hero-disc"><span>RD</span></div><div class="hero-glow"></div></div></div>
+            <div class="home-shortcuts"><button (click)="openAlbums()"><span class="shortcut-icon albums-icon">▦</span><span>Ver álbumes</span><b>→</b></button><button (click)="openArtists()"><span class="shortcut-icon artists-icon">♬</span><span>Explorar artistas</span><b>→</b></button><button class="random-group-shortcut" (click)="playRandomGroup()" [disabled]="busy()" aria-label="Reproducir un grupo aleatorio con más de 10 canciones"><span class="shortcut-icon random-group-icon">⤨</span><span>Grupo aleatorio <small>Artista con más de 10 canciones</small></span><b>▶</b></button><button (click)="openQueue()"><span class="shortcut-icon queue-shortcut">≋</span><span>Cola de Alexa <small>{{ pendingCount() }} pendientes</small></span><b>→</b></button></div>
+            <div class="home-section-head"><div><p class="eyebrow">IBROADCAST</p><h2>Álbumes para descubrir</h2></div><button (click)="openAlbums()">Mostrar todos <span>→</span></button></div>
+            @if (albumsLoading()) { <div class="album-grid home-albums skeleton-grid" role="status" aria-label="Cargando álbumes">@for (card of skeletonCards; track card) { <article class="album-card skeleton-card"><span class="skeleton skeleton-cover"></span><span class="skeleton skeleton-line skeleton-title"></span><span class="skeleton skeleton-line skeleton-meta"></span></article> }</div> }
+            @else { <div class="album-grid home-albums">@for (album of albums().slice(0, 6); track album.id ?? album.name) { <article class="album-card"><div class="album-cover" [class]="'album-cover ' + entityArt(album)">@if (album.artwork_url) { <img [src]="album.artwork_url" [alt]="'Carátula de ' + album.name" loading="lazy"> } @else { <span>{{ album.name.charAt(0).toUpperCase() }}</span> }<button class="play-fab" (click)="playAlbum(album)" [disabled]="busy()" [attr.aria-label]="'Reproducir ' + album.name + ' y sustituir la cola de Alexa'" title="Sustituye toda la cola de Alexa">▶</button></div><strong>{{ album.name }}</strong><span>{{ album.artist || 'Artista desconocido' }}@if (album.year) { · {{ album.year }} }</span></article> }</div> }
+            <div class="home-section-head artist-home-head"><div><p class="eyebrow">NOMBRES QUE TE GUSTAN</p><h2>Artistas</h2></div><button (click)="openArtists()">Mostrar todos <span>→</span></button></div>
+            @if (artistsLoading()) { <div class="artist-grid home-artists skeleton-grid" role="status" aria-label="Cargando artistas">@for (card of skeletonCards; track card) { <article class="artist-card skeleton-card"><span class="skeleton skeleton-circle"></span><span class="skeleton skeleton-line skeleton-title"></span><span class="skeleton skeleton-line skeleton-meta"></span></article> }</div> }
+            @else { <div class="artist-grid home-artists">@for (artist of artists().slice(0, 5); track artist.id ?? artist.name) { <article class="artist-card"><button class="artist-avatar" [class]="'artist-avatar ' + entityArt(artist)" (click)="openAlbums(artist)">@if (artist.artwork_url) { <img [src]="artist.artwork_url" [alt]="artist.name" loading="lazy"> } @else { {{ artist.name.charAt(0).toUpperCase() }} }</button><button class="artist-name" (click)="openAlbums(artist)">{{ artist.name }}</button><span class="artist-meta">{{ artist.track_count ?? 0 }} canciones</span><button class="play-fab" (click)="playArtist(artist)" [disabled]="busy()" [attr.aria-label]="'Reproducir ' + artist.name + ' y sustituir la cola de Alexa'" title="Sustituye toda la cola de Alexa">▶</button></article> }</div> }
+          </section>
+        }
+      </div>
+    </main>
+
+    <nav class="mobile-nav" aria-label="Navegación móvil"><button [class.active]="view() === 'home'" (click)="openHome()"><span>⌂</span> Inicio</button><button [class.active]="view() === 'search'" (click)="openSearch()"><span>⌕</span> Buscar</button><button [class.active]="view() === 'albums' || view() === 'artists'" (click)="openAlbums()"><span>▦</span> Biblioteca</button><button [class.active]="view() === 'stats'" (click)="openStatistics()"><span>▥</span> Estadísticas</button><button [class.active]="view() === 'radios'" (click)="openRadios()"><span>◉</span> Radios</button><button [class.active]="view() === 'queue'" (click)="openQueue()"><span>≋</span> Cola</button></nav>
+  </div>
+}

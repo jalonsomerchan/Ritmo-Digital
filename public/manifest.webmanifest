@@ -1,0 +1,15 @@
+{
+  "name": "Ritmo Digital",
+  "short_name": "Ritmo Digital",
+  "description": "Explora tu música y prepara álbumes, artistas y canciones para Alexa.",
+  "lang": "es-ES",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#f7f6f1",
+  "theme_color": "#f7f6f1",
+  "icons": [
+    { "src": "/icons/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}
