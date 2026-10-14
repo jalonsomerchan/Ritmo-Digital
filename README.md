@@ -19,7 +19,7 @@ El workflow [`.github/workflows/deploy-pages.yml`](.github/workflows/deploy-page
 
 Antes del primer despliegue:
 
-1. En **Settings → Secrets and variables → Actions → Variables** del repositorio, define `VITE_API_BASE`, `VITE_FIREBASE_API_KEY`, `VITE_FIREBASE_AUTH_DOMAIN`, `VITE_FIREBASE_PROJECT_ID` y `VITE_FIREBASE_APP_ID` con los valores de `.env.production`. Añade las variables opcionales de Firebase si las usas: `VITE_FIREBASE_STORAGE_BUCKET`, `VITE_FIREBASE_MESSAGING_SENDER_ID` y `VITE_FIREBASE_MEASUREMENT_ID`. Esta configuración forma parte del código del cliente al compilarse.
+1. En **Settings → Secrets and variables → Actions**, define `VITE_API_BASE`, `VITE_FIREBASE_API_KEY`, `VITE_FIREBASE_AUTH_DOMAIN`, `VITE_FIREBASE_PROJECT_ID` y `VITE_FIREBASE_APP_ID` con los valores de `.env.production`, como variables o secretos del repositorio (o del entorno `github-pages`). Añade también las variables opcionales de Firebase si las usas: `VITE_FIREBASE_STORAGE_BUCKET`, `VITE_FIREBASE_MESSAGING_SENDER_ID` y `VITE_FIREBASE_MEASUREMENT_ID`. Esta configuración forma parte del código del cliente al compilarse.
 2. En **Settings → Pages**, selecciona **GitHub Actions** como fuente y establece `ritmodigital.alon.one` como dominio personalizado.
 3. En el proveedor DNS, crea un registro `CNAME` para `ritmodigital` que apunte a `jalonsomerchan.github.io`.
 4. Añade `ritmodigital.alon.one` a los dominios autorizados de Firebase Authentication y permite ese origen en la configuración CORS de la API.
