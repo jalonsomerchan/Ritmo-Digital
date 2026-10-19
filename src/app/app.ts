@@ -1,14 +1,15 @@
 import { Component, HostListener, OnDestroy, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { AuthService } from './auth.service';
+import { AlexaLogs } from './alexa-logs';
 import { LibraryItemType, LibraryStatistics, MusicApiService, MusicRadio, QueueItem, RandomPreference, SearchEntity, SearchTrack } from './music-api.service';
 
 type SearchType = 'all' | 'track' | 'artist' | 'album' | 'playlist' | 'genre';
-type MainView = 'home' | 'search' | 'artists' | 'albums' | 'radios' | 'stats' | 'queue';
+type MainView = 'home' | 'search' | 'artists' | 'albums' | 'radios' | 'stats' | 'queue' | 'logs';
 
 @Component({
   selector: 'app-root',
-  imports: [FormsModule],
+  imports: [FormsModule, AlexaLogs],
   templateUrl: './app.html',
   styleUrl: './app.scss',
 })
@@ -173,6 +174,7 @@ export class App implements OnDestroy {
 
   openQueue(): void { this.view.set('queue'); this.error.set(''); }
   openSearch(): void { this.view.set('search'); this.error.set(''); }
+  openLogs(): void { this.view.set('logs'); this.error.set(''); }
 
   async openStatistics(): Promise<void> {
     this.view.set('stats');

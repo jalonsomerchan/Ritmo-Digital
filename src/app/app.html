@@ -78,6 +78,7 @@
         <button [class.active]="view() === 'albums'" (click)="openAlbums()"><span class="nav-icon">▦</span><span>Álbumes</span></button>
         <button [class.active]="view() === 'radios'" (click)="openRadios()"><span class="nav-icon">◉</span><span>Radios</span></button>
         <button [class.active]="view() === 'stats'" (click)="openStatistics()"><span class="nav-icon">▥</span><span>Estadísticas</span></button>
+        <button [class.active]="view() === 'logs'" (click)="openLogs()"><span class="nav-icon">☷</span><span>Logs de Alexa</span></button>
         <button [class.active]="view() === 'queue'" (click)="openQueue()"><span class="nav-icon queue-icon">≋</span><span>Cola de Alexa</span><span class="nav-count">{{ pendingCount() }}</span></button>
       </nav>
       <div class="sidebar-device">
@@ -93,7 +94,7 @@
 
     <main class="main-area">
       <header class="topbar">
-        <div class="breadcrumbs"><span>Ritmo Digital</span><span class="crumb-slash">/</span><strong>{{ view() === 'home' ? 'Inicio' : view() === 'artists' ? 'Artistas' : view() === 'albums' ? 'Álbumes' : view() === 'radios' ? 'Radios' : view() === 'stats' ? 'Estadísticas' : view() === 'queue' ? 'Cola de Alexa' : 'Buscar' }}</strong></div>
+        <div class="breadcrumbs"><span>Ritmo Digital</span><span class="crumb-slash">/</span><strong>{{ view() === 'home' ? 'Inicio' : view() === 'artists' ? 'Artistas' : view() === 'albums' ? 'Álbumes' : view() === 'radios' ? 'Radios' : view() === 'stats' ? 'Estadísticas' : view() === 'logs' ? 'Logs de Alexa' : view() === 'queue' ? 'Cola de Alexa' : 'Buscar' }}</strong></div>
         <div class="top-actions"><span class="connection-label"><i></i> Conectado</span><button class="icon-button refresh-button" aria-label="Actualizar cola" title="Actualizar cola" (click)="loadDashboard()" [disabled]="loadingQueue()">↻</button><button class="button sync-library-button" [class.syncing]="syncingLibrary()" (click)="syncLibrary()" [disabled]="syncingLibrary()" [attr.aria-label]="syncingLibrary() ? 'Sincronizando biblioteca' : 'Sincronizar biblioteca'" title="Sincronizar biblioteca"><span aria-hidden="true">↻</span><span class="sync-library-label">{{ syncingLibrary() ? 'Sincronizando…' : 'Sincronizar' }}</span></button><button class="button small-search" (click)="openSearch()"><span>⌕</span> Buscar música</button></div>
       </header>
 
@@ -101,7 +102,9 @@
         @if (error()) { <div class="global-error" role="alert"><span>!</span><span>{{ error() }}</span><button aria-label="Cerrar aviso" (click)="error.set('')">×</button></div> }
         @if (notice()) { <div class="toast" role="status"><span>✓</span>{{ notice() }}</div> }
 
-        @if (searching()) {
+        @if (view() === 'logs') {
+          <app-alexa-logs />
+        } @else if (searching()) {
           <section class="search-view">
             <div class="page-heading search-heading">
               <div><p class="eyebrow">IBROADCAST · TU BIBLIOTECA</p><h1>Encuentra tu <em>próxima canción.</em></h1><p>Busca por título, artista, álbum o género.</p></div>
@@ -267,6 +270,6 @@
       </div>
     </main>
 
-    <nav class="mobile-nav" aria-label="Navegación móvil"><button [class.active]="view() === 'home'" (click)="openHome()"><span>⌂</span> Inicio</button><button [class.active]="view() === 'search'" (click)="openSearch()"><span>⌕</span> Buscar</button><button [class.active]="view() === 'albums' || view() === 'artists'" (click)="openAlbums()"><span>▦</span> Biblioteca</button><button [class.active]="view() === 'stats'" (click)="openStatistics()"><span>▥</span> Estadísticas</button><button [class.active]="view() === 'radios'" (click)="openRadios()"><span>◉</span> Radios</button><button [class.active]="view() === 'queue'" (click)="openQueue()"><span>≋</span> Cola</button></nav>
+    <nav class="mobile-nav" aria-label="Navegación móvil"><button [class.active]="view() === 'home'" (click)="openHome()"><span>⌂</span> Inicio</button><button [class.active]="view() === 'search'" (click)="openSearch()"><span>⌕</span> Buscar</button><button [class.active]="view() === 'albums' || view() === 'artists'" (click)="openAlbums()"><span>▦</span> Biblioteca</button><button [class.active]="view() === 'stats'" (click)="openStatistics()"><span>▥</span> Estadísticas</button><button [class.active]="view() === 'radios'" (click)="openRadios()"><span>◉</span> Radios</button><button [class.active]="view() === 'logs'" (click)="openLogs()"><span>☷</span> Logs</button><button [class.active]="view() === 'queue'" (click)="openQueue()"><span>≋</span> Cola</button></nav>
   </div>
 }

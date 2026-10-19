@@ -1,0 +1,41 @@
+<section aria-labelledby="logs-title">
+  <header class="logs-heading">
+    <div><p class="eyebrow">ALEXA · REGISTRO DE PETICIONES</p><h1 id="logs-title">Logs de Alexa</h1><p>Consulta las peticiones y respuestas de tu cuenta Alexa vinculada, de más reciente a más antigua.</p></div>
+    <button type="button" (click)="load()" [disabled]="loading()">↻ Actualizar</button>
+  </header>
+  <div class="logs-toolbar">
+    <label for="log-status">Estado</label>
+    <select id="log-status" [ngModel]="status()" (ngModelChange)="filter($event)">
+      @for (option of statuses; track option.value) { <option [value]="option.value">{{ option.label }}</option> }
+    </select>
+    <span>{{ items().length }} registros cargados · Fechas en UTC</span>
+  </div>
+  <p class="logs-note">Los registros sin una cuenta Alexa identificable no aparecen aquí. «Con respuesta» indica que el servidor generó una respuesta; no confirma que Alexa la recibiera.</p>
+  @if (error()) { <div class="logs-error" role="alert"><p>{{ error() }}</p><button type="button" (click)="load(!!items().length)">Reintentar</button></div> }
+  <div class="logs-list" [attr.aria-busy]="loading()">
+    @for (log of items(); track log.id) {
+      <article class="log-card">
+        <button type="button" class="log-summary" (click)="toggleDetail(log.id)" [attr.aria-expanded]="selectedId() === log.id" [attr.aria-controls]="'log-detail-' + log.id">
+          <span class="log-identity"><strong>{{ log.intent_name || log.request_type || 'Petición sin tipo' }}</strong><small>#{{ log.id }} · {{ log.http_method }} · {{ log.received_at }} UTC</small><small>{{ log.request_type || 'Tipo desconocido' }}</small></span>
+          <span class="log-result"><span class="log-status" [class]="'log-status status-' + log.status">{{ statusLabel(log.status) }}</span><small>HTTP {{ log.http_status ?? '—' }} · {{ log.duration_ms === null ? 'Duración pendiente' : log.duration_ms + ' ms' }}</small>@if (log.error_code) { <small class="error-code">{{ log.error_code }}</small> }</span>
+          <span aria-hidden="true">{{ selectedId() === log.id ? '−' : '+' }}</span>
+        </button>
+        <div [id]="'log-detail-' + log.id" [hidden]="selectedId() !== log.id">
+          @if (selectedId() === log.id) {
+            <div class="log-detail">
+              @if (detailLoading()) { <p role="status">Cargando detalle…</p> }
+              @else if (detailError()) { <div class="logs-error" role="alert"><p>{{ detailError() }}</p><button type="button" (click)="toggleDetail(log.id)">Reintentar</button></div> }
+              @else if (detail(); as entry) {
+                <dl><div><dt>ID de petición</dt><dd>{{ entry.request_id || 'Sin ID' }}</dd></div><div><dt>Finalización (UTC)</dt><dd>{{ entry.completed_at || 'Pendiente' }}</dd></div><div><dt>Respuesta generada</dt><dd>{{ entry.has_response ? 'Sí' : 'No' }}</dd></div></dl>
+                <div class="log-payloads"><section><h2>Petición JSON</h2><pre tabindex="0" aria-label="JSON de petición">{{ entry.request_json | json }}</pre></section><section><h2>Respuesta JSON</h2>@if (entry.response_json === null) { <p>No hay respuesta registrada.</p> } @else { <pre tabindex="0" aria-label="JSON de respuesta">{{ entry.response_json | json }}</pre> }</section></div>
+              }
+            </div>
+          }
+        </div>
+      </article>
+    }
+  </div>
+  @if (loading()) { <p class="logs-empty" role="status">Cargando registros…</p> }
+  @else if (loaded() && !items().length) { <div class="logs-empty" role="status"><h2>No hay registros para mostrar.</h2><p>{{ status() ? 'Prueba con otro estado.' : 'Las próximas peticiones de tu cuenta Alexa aparecerán aquí.' }}</p></div> }
+  @if (nextId()) { <button class="logs-more" type="button" (click)="load(true)" [disabled]="loading()">Cargar registros anteriores ↓</button> }
+</section>

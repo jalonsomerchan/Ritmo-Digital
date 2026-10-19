@@ -4,6 +4,28 @@ import { firstValueFrom } from 'rxjs';
 import { AuthService } from './auth.service';
 import { environment } from '../environments/environment';
 
+export type AlexaLogStatus = 'pending' | 'responded' | 'error' | 'no_response';
+
+export interface AlexaLog {
+  id: string;
+  received_at: string;
+  completed_at: string | null;
+  http_method: string;
+  request_id: string | null;
+  request_type: string | null;
+  intent_name: string | null;
+  has_response: boolean;
+  http_status: number | null;
+  status: AlexaLogStatus;
+  error_code: string | null;
+  duration_ms: number | null;
+}
+
+export interface AlexaLogDetail extends AlexaLog {
+  request_json: unknown;
+  response_json: unknown;
+}
+
 export interface QueueItem {
   index: number;
   track_id: string;
@@ -166,6 +188,21 @@ export class MusicApiService {
     return this.unwrap<LibraryStatistics>(await firstValueFrom(
       this.http.get(this.url('library_statistics'), { headers: await this.headers() }),
     ));
+  }
+
+  async getAlexaLogs(status: AlexaLogStatus | '', beforeId: string | null = null): Promise<{ items: AlexaLog[]; next_before_id: string | null }> {
+    let params = new HttpParams().set('limit', 25);
+    if (status) params = params.set('status', status);
+    if (beforeId) params = params.set('before_id', beforeId);
+    return this.unwrap<{ items: AlexaLog[]; next_before_id: string | null }>(await firstValueFrom(
+      this.http.get(this.url('alexa_logs'), { headers: await this.headers(), params }),
+    ));
+  }
+
+  async getAlexaLog(id: string): Promise<AlexaLogDetail> {
+    return this.unwrap<{ item: AlexaLogDetail }>(await firstValueFrom(
+      this.http.get(this.url('alexa_logs'), { headers: await this.headers(), params: new HttpParams().set('id', id) }),
+    )).item;
   }
 
   async getRandomPreferences(): Promise<RandomPreference[]> {

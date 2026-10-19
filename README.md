@@ -33,6 +33,7 @@ El archivo `public/CNAME` queda incluido en la salida como referencia del domini
 - Búsqueda de canciones, artistas, álbumes, playlists y géneros.
 - Añadir canciones, quitar pendientes, vaciar la parte editable y reordenarla con controles o arrastrando.
 - La app marca como protegidas las canciones que Alexa ya ha recibido. La API conserva esos límites al editar.
+- Página «Logs de Alexa» con filtro de estado, paginación y detalle JSON de las peticiones de la cuenta vinculada. Requiere desplegar también `MiMusicaAlexaLogsApi.php` y el `mimusica.php` actualizado de la API.
 - Diseño adaptable a móvil y escritorio, accesible con teclado y compatible con la preferencia de movimiento reducido.
 
 ## API
