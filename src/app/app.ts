@@ -319,7 +319,7 @@ export class App implements OnDestroy {
     await this.loadArtists(value);
   }
 
-  searchRadioArtistsOnEnter(event: KeyboardEvent): void {
+  searchRadioArtistsOnEnter(event: Event): void {
     event.preventDefault();
     void this.filterRadioArtists(this.radioSearch());
   }
@@ -469,7 +469,7 @@ export class App implements OnDestroy {
     this.searchTimer = setTimeout(() => void this.search(), 220);
   }
 
-  searchOnEnter(event: KeyboardEvent): void {
+  searchOnEnter(event: Event): void {
     event.preventDefault();
     if (this.searchTimer) clearTimeout(this.searchTimer);
     this.searchRequestId++;
