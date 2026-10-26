@@ -184,6 +184,14 @@ export class MusicApiService {
     return this.unwrap<{ items: SearchEntity[]; total: number }>(await firstValueFrom(this.http.get(this.url('library_albums'), { headers: await this.headers(), params })));
   }
 
+  async getCollectionTracks(type: 'artist' | 'album', id: string): Promise<SearchTrack[]> {
+    const params = new HttpParams().set('type', type).set('id', id);
+    const response = this.unwrap<{ items: SearchTrack[] }>(await firstValueFrom(
+      this.http.get(this.url('library_collection_tracks'), { headers: await this.headers(), params }),
+    ));
+    return (response.items ?? []).map(track => ({ ...track, duration: track.duration_seconds ?? track.duration }));
+  }
+
   async getLibraryStatistics(): Promise<LibraryStatistics> {
     return this.unwrap<LibraryStatistics>(await firstValueFrom(
       this.http.get(this.url('library_statistics'), { headers: await this.headers() }),

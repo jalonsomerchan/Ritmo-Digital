@@ -5,7 +5,7 @@ import { AlexaLogs } from './alexa-logs';
 import { LibraryItemType, LibraryStatistics, MusicApiService, MusicRadio, QueueItem, RandomPreference, SearchEntity, SearchTrack } from './music-api.service';
 
 type SearchType = 'all' | 'track' | 'artist' | 'album' | 'playlist' | 'genre';
-type MainView = 'home' | 'search' | 'artists' | 'albums' | 'radios' | 'stats' | 'queue' | 'logs';
+type MainView = 'home' | 'search' | 'artists' | 'albums' | 'album' | 'radios' | 'stats' | 'queue' | 'logs';
 
 @Component({
   selector: 'app-root',
@@ -31,6 +31,11 @@ export class App implements OnDestroy {
   readonly editingRadioId = signal<number | null>(null);
   readonly savingRadio = signal(false);
   readonly selectedArtist = signal<SearchEntity | null>(null);
+  readonly selectedAlbum = signal<SearchEntity | null>(null);
+  readonly artistTracks = signal<SearchTrack[]>([]);
+  readonly albumTracks = signal<SearchTrack[]>([]);
+  readonly collectionTracksLoading = signal(false);
+  readonly showAllArtistTracks = signal(false);
   readonly libraryQuery = signal('');
   readonly artistsLoading = signal(false);
   readonly albumsLoading = signal(false);
@@ -67,8 +72,15 @@ export class App implements OnDestroy {
   private artistsRequestId = 0;
   private albumsRequestId = 0;
   private authUnsubscribe?: () => void;
+  private queueRefreshTimer: ReturnType<typeof setInterval>;
+  private queueRefreshInFlight = false;
 
   constructor() {
+    this.queueRefreshTimer = setInterval(() => {
+      if (this.view() === 'queue' && this.auth.user() && this.linked() && !document.hidden) {
+        void this.refreshQueueSilently();
+      }
+    }, 5000);
     this.authUnsubscribe = this.auth.listen(user => {
       this.booting.set(false);
       if (user) void this.loadDashboard();
@@ -88,6 +100,7 @@ export class App implements OnDestroy {
 
   ngOnDestroy(): void {
     this.authUnsubscribe?.();
+    clearInterval(this.queueRefreshTimer);
     if (this.searchTimer) clearTimeout(this.searchTimer);
     if (this.librarySearchTimer) clearTimeout(this.librarySearchTimer);
   }
@@ -172,7 +185,11 @@ export class App implements OnDestroy {
     }
   }
 
-  openQueue(): void { this.view.set('queue'); this.error.set(''); }
+  openQueue(): void {
+    this.view.set('queue');
+    this.error.set('');
+    if (this.linked()) void this.refreshQueueSilently();
+  }
   openSearch(): void { this.view.set('search'); this.error.set(''); }
   openLogs(): void { this.view.set('logs'); this.error.set(''); }
 
@@ -189,25 +206,63 @@ export class App implements OnDestroy {
     finally { this.statisticsLoading.set(false); }
   }
 
-  openHome(): void { this.view.set('home'); this.selectedArtist.set(null); this.error.set(''); }
+  openHome(): void { this.view.set('home'); this.selectedArtist.set(null); this.selectedAlbum.set(null); this.error.set(''); }
 
   async openArtists(): Promise<void> {
     this.libraryQuery.set('');
     this.view.set('artists');
     this.selectedArtist.set(null);
+    this.selectedAlbum.set(null);
     await this.loadArtists('');
   }
 
   async openAlbums(artist: SearchEntity | null = null): Promise<void> {
     this.libraryQuery.set('');
     this.selectedArtist.set(artist);
+    this.selectedAlbum.set(null);
+    this.showAllArtistTracks.set(false);
     this.view.set('albums');
-    await this.loadAlbums(artist?.id ?? '', '');
+    if (artist?.id) {
+      this.artistTracks.set([]);
+      this.collectionTracksLoading.set(true);
+      const [_, tracks] = await Promise.all([
+        this.loadAlbums(artist.id, ''),
+        this.api.getCollectionTracks('artist', artist.id).catch(error => {
+          this.error.set(this.apiMessage(error));
+          return [];
+        }),
+      ]);
+      this.artistTracks.set(tracks);
+      this.collectionTracksLoading.set(false);
+    } else {
+      this.artistTracks.set([]);
+      await this.loadAlbums('', '');
+    }
   }
 
-  async filterLibrary(value: string): Promise<void> {
+  async openAlbum(album: SearchEntity): Promise<void> {
+    if (!album.id) return;
+    this.selectedAlbum.set(album);
+    this.albumTracks.set([]);
+    this.view.set('album');
+    this.collectionTracksLoading.set(true);
+    try { this.albumTracks.set(await this.api.getCollectionTracks('album', album.id)); }
+    catch (error) { this.error.set(this.apiMessage(error)); }
+    finally { this.collectionTracksLoading.set(false); }
+  }
+
+  backToAlbums(): void { this.view.set('albums'); this.selectedAlbum.set(null); }
+
+  toggleAllArtistTracks(): void { this.showAllArtistTracks.update(value => !value); }
+
+  async filterLibrary(value: string, immediate = false): Promise<void> {
     this.libraryQuery.set(value);
     if (this.librarySearchTimer) clearTimeout(this.librarySearchTimer);
+    if (immediate) {
+      if (this.view() === 'artists') await this.loadArtists(value);
+      else if (this.view() === 'albums') await this.loadAlbums(this.selectedArtist()?.id ?? '', value);
+      return;
+    }
     this.librarySearchTimer = setTimeout(() => {
       if (this.view() === 'artists') void this.loadArtists(value);
       else if (this.view() === 'albums') void this.loadAlbums(this.selectedArtist()?.id ?? '', value);
@@ -264,6 +319,11 @@ export class App implements OnDestroy {
     await this.loadArtists(value);
   }
 
+  searchRadioArtistsOnEnter(event: KeyboardEvent): void {
+    event.preventDefault();
+    void this.filterRadioArtists(this.radioSearch());
+  }
+
   startNewRadio(): void {
     this.editingRadioId.set(null);
     this.radioName.set('');
@@ -317,6 +377,11 @@ export class App implements OnDestroy {
   async playAlbum(album: SearchEntity): Promise<void> {
     if (!album.id) return;
     await this.replaceCollection(() => this.api.replaceAlbum(album.id!), `La cola se ha sustituido por «${album.name}»`);
+  }
+
+  async addAlbumTracks(album: SearchEntity): Promise<void> {
+    if (!album.id) return;
+    await this.addCollection(() => this.api.addAlbum(album.id!), `Álbum «${album.name}» añadido a la cola`);
   }
 
   async playEntity(entity: SearchEntity): Promise<void> {
@@ -404,9 +469,17 @@ export class App implements OnDestroy {
     this.searchTimer = setTimeout(() => void this.search(), 220);
   }
 
+  searchOnEnter(event: KeyboardEvent): void {
+    event.preventDefault();
+    if (this.searchTimer) clearTimeout(this.searchTimer);
+    this.searchRequestId++;
+    this.searchLoading.set(false);
+    void this.search();
+  }
+
   async search(loadMore = false): Promise<void> {
     const q = this.query().trim();
-    if (q.length < 2 || this.searchLoading()) return;
+    if (q.length < 2 || (this.searchLoading() && !loadMore)) return;
     const requestId = ++this.searchRequestId;
     const offset = loadMore ? this.searchOffset() : 0;
     this.searchLoading.set(true);
@@ -621,6 +694,18 @@ export class App implements OnDestroy {
     const queue = await this.api.getQueue();
     this.queue.set(queue.items ?? []);
     this.pendingCount.set(queue.pending_count ?? queue.items?.filter(item => !item.locked).length ?? 0);
+  }
+
+  private async refreshQueueSilently(): Promise<void> {
+    if (this.queueRefreshInFlight || this.view() !== 'queue' || !this.auth.user() || !this.linked()) return;
+    this.queueRefreshInFlight = true;
+    try {
+      await this.loadQueueOnly();
+    } catch {
+      // Keep the current queue visible; the next interval will retry.
+    } finally {
+      this.queueRefreshInFlight = false;
+    }
   }
 
   private apiMessage(error: unknown): string {

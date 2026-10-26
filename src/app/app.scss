@@ -75,6 +75,22 @@ button:disabled { cursor: default; opacity: .45; }
 .collection-play:hover:not(:disabled) { border-color: #1ed760; color: #08150b; background: #1ed760; transform: translateY(-1px); }
 .collection-play:disabled { cursor: wait; opacity: .68; }
 .catalog-view .random-flags { justify-content: center; }
+.album-cover { padding: 0; border: 0; cursor: pointer; }
+.album-title-link { padding: 0; overflow: hidden; border: 0; color: #f5f5f5; background: transparent; font-size: .82rem; font-weight: 680; text-align: left; text-overflow: ellipsis; white-space: nowrap; cursor: pointer; }
+.album-title-link:hover { text-decoration: underline; }
+.collection-view { display: flex; align-items: center; justify-content: space-between; padding: 8px 10px; border: 1px solid #344339; border-radius: 5px; color: #d7e5d9; background: #1c261f; font-size: .65rem; font-weight: 650; cursor: pointer; }
+.collection-view:hover { border-color: #1ed760; color: #fff; }
+.collection-tracks-section { margin-top: 38px; }
+.collection-tracks-section .home-section-head { margin-bottom: 14px; }
+.collection-tracks-section .home-section-head h2 { font-size: 1.15rem; }
+.collection-loading { padding: 18px; color: #999; font-size: .8rem; }
+.collection-track-list { margin-top: 5px; }
+.collection-back { margin: 0 0 18px; }
+.album-spotlight .spotlight-art { border-radius: 9px; }
+.album-spotlight .spotlight-art img { width: 100%; height: 100%; object-fit: cover; }
+.track-add-button { width: 34px; height: 34px; border: 1px solid #384139; border-radius: 50%; color: #1ed760; background: #151915; font-size: 1.2rem; cursor: pointer; }
+.track-add-button:hover { border-color: #1ed760; background: #1d2a20; }
+.track-add-button:disabled { opacity: .45; cursor: wait; }
 .skeleton { display: block; overflow: hidden; border-radius: 7px; background: linear-gradient(100deg, #202520 20%, #343b34 38%, #202520 56%); background-size: 220% 100%; animation: skeleton-shimmer 1.35s ease-in-out infinite; }
 @keyframes skeleton-shimmer { to { background-position-x: -220%; } }
 .skeleton-grid { align-items: stretch; }
