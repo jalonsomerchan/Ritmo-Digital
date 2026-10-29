@@ -55,6 +55,7 @@ export class App implements OnDestroy {
   readonly searchType = signal<SearchType>('all');
   readonly searchTracks = signal<SearchTrack[]>([]);
   readonly searchEntities = signal<SearchEntity[]>([]);
+  readonly openActionMenuId = signal<string | null>(null);
   readonly searchLoading = signal(false);
   readonly searchMore = signal(false);
   readonly searchTotal = signal(0);
@@ -112,7 +113,29 @@ export class App implements OnDestroy {
       this.openSearch();
       window.setTimeout(() => document.querySelector<HTMLInputElement>('.search-box input')?.focus(), 0);
     }
+    if (event.key === 'Escape' && this.openActionMenuId()) {
+      this.openActionMenuId.set(null);
+      return;
+    }
     if (event.key === 'Escape' && this.searching()) this.openQueue();
+  }
+
+  toggleActionMenu(trackId: string): void {
+    this.openActionMenuId.update(current => current === trackId ? null : trackId);
+  }
+
+  closeActionMenu(): void { this.openActionMenuId.set(null); }
+
+  entityMenuKey(type: 'artist' | 'album', id: string | undefined): string { return `${type}:${id ?? ''}`; }
+
+  toggleEntityRandom(type: 'artist' | 'album', entity: SearchEntity, field: 'exclude_group_random' | 'exclude_random'): void {
+    void this.toggleRandomPreference(type, entity.id, field);
+    this.closeActionMenu();
+  }
+
+  @HostListener('document:click', ['$event'])
+  onDocumentClick(event: MouseEvent): void {
+    if (!(event.target instanceof Element) || !event.target.closest('.track-menu-wrap')) this.closeActionMenu();
   }
 
   async signInWithGoogle(): Promise<void> {
@@ -271,7 +294,18 @@ export class App implements OnDestroy {
 
   async playArtist(artist: SearchEntity): Promise<void> {
     if (!artist.id) return;
+    this.closeActionMenu();
     await this.replaceCollection(() => this.api.replaceArtist(artist.id!), `La cola se ha sustituido por ${artist.name}`);
+  }
+
+  async addArtistNext(artist: SearchEntity): Promise<void> {
+    if (!artist.id) return;
+    await this.updateEntityQueue(() => this.api.addArtist(artist.id!, this.firstEditableQueueIndex()), `Se ha añadido ${artist.name} a continuación`);
+  }
+
+  async addArtistLast(artist: SearchEntity): Promise<void> {
+    if (!artist.id) return;
+    await this.updateEntityQueue(() => this.api.addArtist(artist.id!), `Se ha añadido ${artist.name} al final de la cola`);
   }
 
   async playRandomGroup(): Promise<void> {
@@ -376,7 +410,18 @@ export class App implements OnDestroy {
 
   async playAlbum(album: SearchEntity): Promise<void> {
     if (!album.id) return;
+    this.closeActionMenu();
     await this.replaceCollection(() => this.api.replaceAlbum(album.id!), `La cola se ha sustituido por «${album.name}»`);
+  }
+
+  async addAlbumNext(album: SearchEntity): Promise<void> {
+    if (!album.id) return;
+    await this.updateEntityQueue(() => this.api.addAlbum(album.id!, this.firstEditableQueueIndex()), `Se ha añadido «${album.name}» a continuación`);
+  }
+
+  async addAlbumLast(album: SearchEntity): Promise<void> {
+    if (!album.id) return;
+    await this.updateEntityQueue(() => this.api.addAlbum(album.id!), `Se ha añadido «${album.name}» al final de la cola`);
   }
 
   async addAlbumTracks(album: SearchEntity): Promise<void> {
@@ -393,6 +438,30 @@ export class App implements OnDestroy {
   async playTrack(track: SearchTrack): Promise<void> {
     await this.addTrack(track);
     if (!this.error()) this.notice.set(`«${track.title}» añadida a la cola de Alexa`);
+  }
+
+  async addTrackNext(track: SearchTrack): Promise<void> {
+    await this.updateTrackQueue([track.id], this.firstEditableQueueIndex(), `«${track.title}» añadida a continuación`);
+  }
+
+  async addTrackLast(track: SearchTrack): Promise<void> {
+    await this.updateTrackQueue([track.id], undefined, `«${track.title}» añadida al final de la cola`);
+  }
+
+  async replaceQueueWithTrack(track: SearchTrack): Promise<void> {
+    await this.updateTrackQueue([track.id], undefined, `La cola se ha sustituido por «${track.title}»`, true);
+  }
+
+  async openTrackArtist(track: SearchTrack): Promise<void> {
+    if (!track.artist_id) return;
+    this.closeActionMenu();
+    await this.openAlbums({ id: track.artist_id, name: track.artist || 'Artista' });
+  }
+
+  async openTrackAlbum(track: SearchTrack): Promise<void> {
+    if (!track.album_id) return;
+    this.closeActionMenu();
+    await this.openAlbum({ id: track.album_id, name: track.album || 'Álbum', artist: track.artist, artist_id: track.artist_id });
   }
 
   async playAllSearchResults(): Promise<void> { await this.addTracks(this.searchTracks().map(track => track.id)); }
@@ -527,6 +596,45 @@ export class App implements OnDestroy {
       await this.loadQueueOnly();
       this.notice.set(ids.length === 1 ? 'Añadida a la cola' : `${ids.length} canciones añadidas`);
       window.setTimeout(() => this.notice.set(''), 2600);
+    } catch (error) {
+      this.error.set(this.apiMessage(error));
+    } finally {
+      this.busy.set(false);
+    }
+  }
+
+  private async updateTrackQueue(ids: string[], position: number | undefined, message: string, replace = false): Promise<void> {
+    if (!ids.length || this.busy()) return;
+    this.closeActionMenu();
+    this.busy.set(true);
+    this.error.set('');
+    try {
+      if (replace) await this.api.replaceTracks(ids);
+      else await this.api.addTracks(ids, position);
+      await this.loadQueueOnly();
+      this.notice.set(`${message}. Abre la skill de música en tu Echo para empezar.`);
+      window.setTimeout(() => this.notice.set(''), 5000);
+    } catch (error) {
+      this.error.set(this.apiMessage(error));
+    } finally {
+      this.busy.set(false);
+    }
+  }
+
+  private firstEditableQueueIndex(): number {
+    return this.queue().find(item => !item.locked)?.index ?? this.queue().length;
+  }
+
+  private async updateEntityQueue(action: () => Promise<void>, message: string): Promise<void> {
+    if (this.busy()) return;
+    this.closeActionMenu();
+    this.busy.set(true);
+    this.error.set('');
+    try {
+      await action();
+      await this.loadQueueOnly();
+      this.notice.set(`${message}. Abre la skill de música en tu Echo para empezar.`);
+      window.setTimeout(() => this.notice.set(''), 5000);
     } catch (error) {
       this.error.set(this.apiMessage(error));
     } finally {

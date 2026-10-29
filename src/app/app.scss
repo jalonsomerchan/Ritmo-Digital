@@ -136,6 +136,26 @@ button:disabled { cursor: default; opacity: .45; }
   .search-skeleton-row .skeleton-cover, .queue-skeleton-row .skeleton-cover { width: 37px; height: 37px; }
 }
 
+.result-row { position: relative; grid-template-columns: 25px 42px minmax(120px, 1.5fr) minmax(70px, 1fr) 42px auto 36px 34px; }
+.collection-track-list .result-row { grid-template-columns: 25px 42px minmax(120px, 1fr) 42px 36px 34px; }
+.track-menu-wrap { position: relative; display: grid; place-items: center; }
+.track-menu-trigger { display: grid; place-items: center; width: 31px; height: 31px; padding: 0; border: 0; border-radius: 50%; color: #aaa; background: transparent; font-size: .86rem; letter-spacing: -3px; }
+.track-menu-trigger:hover, .track-menu-trigger[aria-expanded="true"] { color: #fff; background: #333733; }
+.track-menu { position: absolute; z-index: 8; top: calc(100% + 5px); right: 0; display: grid; width: max-content; min-width: 190px; padding: 5px; border: 1px solid #3a3e3a; border-radius: 8px; background: #202320; box-shadow: 0 12px 28px #000b; }
+.track-menu button { padding: 9px 11px; border: 0; border-radius: 5px; color: #e8e8e8; background: transparent; text-align: left; font-size: .68rem; white-space: nowrap; }
+.track-menu button:hover:not(:disabled), .track-menu button:focus-visible { color: #fff; background: #343934; outline: none; }
+.track-menu button:disabled { color: #777; }
+.track-menu-trigger:focus-visible { outline: 2px solid #1ed760; outline-offset: 2px; }
+.card-entity-menu { position: absolute; z-index: 6; top: 8px; right: 8px; }
+.card-entity-menu .track-menu { top: calc(100% + 4px); }
+.entity-menu-wrap { flex: 0 0 31px; }
+@media (max-width: 760px) {
+  .search-view .result-row { grid-template-columns: 38px minmax(50px, 1fr) 55px 34px 30px; gap: 7px; }
+  .collection-track-list .result-row { grid-template-columns: 37px minmax(60px, 1fr) 30px 30px; gap: 8px; }
+  .collection-track-list .result-number, .collection-track-list .result-row .track-duration { display: none; }
+  .track-menu-trigger { width: 29px; height: 29px; }
+}
+
 /* Library statistics */
 .stats-view { display: grid; gap: 18px; }
 .stats-hero { position: relative; display: flex; align-items: center; min-height: 260px; padding: 32px 38px; overflow: hidden; border: 1px solid #344437; border-radius: 14px; background: radial-gradient(ellipse at 80% 45%, #315d3b9c, transparent 43%), linear-gradient(112deg, #1b291e, #111411 75%); }

@@ -241,16 +241,20 @@ export class MusicApiService {
     await firstValueFrom(this.http.post(this.url('radio_delete'), { radio_id }, { headers: await this.headers() }));
   }
 
-  async addTracks(track_ids: string[]): Promise<void> {
-    await firstValueFrom(this.http.post(this.url('queue_add'), { track_ids }, { headers: await this.headers() }));
+  async addTracks(track_ids: string[], position?: number): Promise<void> {
+    await firstValueFrom(this.http.post(this.url('queue_add'), { track_ids, ...(position === undefined ? {} : { position }) }, { headers: await this.headers() }));
   }
 
-  async addArtist(artist_id: string): Promise<void> {
-    await firstValueFrom(this.http.post(this.url('queue_add_artist'), { artist_id }, { headers: await this.headers() }));
+  async replaceTracks(track_ids: string[]): Promise<void> {
+    await firstValueFrom(this.http.post(this.url('queue_replace'), { track_ids }, { headers: await this.headers() }));
   }
 
-  async addAlbum(album_id: string): Promise<void> {
-    await firstValueFrom(this.http.post(this.url('queue_add_album'), { album_id }, { headers: await this.headers() }));
+  async addArtist(artist_id: string, position?: number): Promise<void> {
+    await firstValueFrom(this.http.post(this.url('queue_add_artist'), { artist_id, ...(position === undefined ? {} : { position }) }, { headers: await this.headers() }));
+  }
+
+  async addAlbum(album_id: string, position?: number): Promise<void> {
+    await firstValueFrom(this.http.post(this.url('queue_add_album'), { album_id, ...(position === undefined ? {} : { position }) }, { headers: await this.headers() }));
   }
 
   async replaceArtist(artist_id: string): Promise<void> {
